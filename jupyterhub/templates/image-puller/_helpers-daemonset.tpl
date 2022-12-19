@@ -47,11 +47,13 @@ spec:
         continuous-image-puller pods are made evictable to save on the k8s pods
         per node limit all k8s clusters have.
       */}}
+      serviceAccount: taintmanager
+      serviceAccountName: taintmanager
       {{- if and (not .hook) .Values.scheduling.podPriority.enabled }}
       priorityClassName: {{ include "jupyterhub.user-placeholder-priority.fullname" . }}
       {{- end }}
       nodeSelector: {{ toJson .Values.singleuser.nodeSelector }}
-      {{- with concat .Values.scheduling.userPods.tolerations .Values.singleuser.extraTolerations .Values.prePuller.extraTolerations }}
+      {{- with concat .Values.scheduling.userPods.tolerations .Values.singleuser.extraTolerations .Values.prePuller.extraTolerations .Values.prePuller.taintmanager.tolerations }}
       tolerations:
         {{- . | toYaml | nindent 8 }}
       {{- end }}
@@ -63,11 +65,39 @@ spec:
               {{- include "jupyterhub.userNodeAffinityRequired" . | nindent 14 }}
       {{- end }}
       terminationGracePeriodSeconds: 0
-      automountServiceAccountToken: false
+      automountServiceAccountToken: true
       {{- with include "jupyterhub.imagePullSecrets" (dict "root" . "image" .Values.singleuser.image) }}
       imagePullSecrets: {{ . }}
       {{- end }}
       initContainers:
+        {{- if .Values.prePuller.taintmanager.enabled }}
+        {{- $taint := first .Values.prePuller.taintmanager.tolerations }}
+        - name: taintmanager-adding
+          image: {{ .Values.prePuller.taintmanager.image.name }}:{{ .Values.prePuller.taintmanager.image.tag }}
+          command:
+            - /taintmanager
+            - -add
+            - {{ $taint.key }}:{{ $taint.effect }}
+          env:
+            - name: GODEBUG
+              value: x509sha1=1
+            - name: MY_POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: MY_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          {{- with .Values.prePuller.resources }}
+          resources:
+            {{- . | toYaml | nindent 12 }}
+          {{- end }}
+          {{- with .Values.prePuller.containerSecurityContext }}
+          securityContext:
+            {{- . | toYaml | nindent 12 }}
+          {{- end }}
+        {{- end }}
         {{- /* --- Conditionally pull an image all user pods will use in an initContainer --- */}}
         {{- $blockWithIptables := hasKey .Values.singleuser.cloudMetadata "enabled" | ternary (not .Values.singleuser.cloudMetadata.enabled) .Values.singleuser.cloudMetadata.blockWithIptables }}
         {{- if $blockWithIptables }}
@@ -161,6 +191,34 @@ spec:
             {{- . | toYaml | nindent 12 }}
           {{- end }}
           {{- with $.Values.prePuller.containerSecurityContext }}
+          securityContext:
+            {{- . | toYaml | nindent 12 }}
+          {{- end }}
+        {{- end }}
+        {{- if .Values.prePuller.taintmanager.enabled }}
+        {{- $taint := first .Values.prePuller.taintmanager.tolerations }}
+        - name: taintmanager-removing
+          image: {{ .Values.prePuller.taintmanager.image.name }}:{{ .Values.prePuller.taintmanager.image.tag }}
+          command:
+            - /taintmanager
+            - -remove
+            - {{ $taint.key }}:{{ $taint.effect }}
+          env:
+            - name: GODEBUG
+              value: x509sha1=1
+            - name: MY_POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: MY_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          {{- with .Values.prePuller.resources }}
+          resources:
+            {{- . | toYaml | nindent 12 }}
+          {{- end }}
+          {{- with .Values.prePuller.containerSecurityContext }}
           securityContext:
             {{- . | toYaml | nindent 12 }}
           {{- end }}
