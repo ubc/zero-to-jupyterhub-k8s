@@ -1,0 +1,26 @@
+{{- if .Values.shib.enabled }}
+{{- if .Values.shib.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "jupyterhub.shib.fullname" . }}-ingress
+  {{- with .Values.shib.ingress.annotations }}
+  annotations:
+    {{- . | toYaml | nindent 4 }}
+  {{- end }}
+  labels:
+    {{- include "jupyterhub.labels" . | nindent 4 }}
+spec:
+  rules:
+    - host: {{ .Values.shib.ingress.host | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+               name: {{ include "jupyterhub.shib.fullname" . }}-web
+               port:
+                number: 443
+{{- end }}
+{{- end }}

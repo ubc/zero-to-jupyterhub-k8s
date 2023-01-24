@@ -1,0 +1,193 @@
+{{- if .Values.shib.enabled }}
+{{- /* [mysql+pymysql,user,password,example.com,3306,database_name] */}}
+{{- $dbconnection := regexSplit ":|/|@" .Values.hub.db.url -1  | compact }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "jupyterhub.shib.fullname" . }}-web
+  labels:
+    {{- include "jupyterhub.labels" . | nindent 4 }}
+    tier: web
+spec:
+  replicas: {{ .Values.shib.web.replicas }}
+  selector:
+    matchLabels:
+      {{- include "jupyterhub.labels" . | nindent 6 }}
+      tier: web
+  template:
+    metadata:
+      labels:
+        {{- include "jupyterhub.labels" . | nindent 8 }}
+        tier: web
+    spec:
+      containers:
+      - image: {{ .Values.shib.web.image.name }}:{{ .Values.shib.web.image.tag }}
+        name: shib-web
+        ports:
+         - containerPort: 443
+         - containerPort: 80
+        env:
+        - name: SHIB_HOST
+          value: {{ include "jupyterhub.shib.fullname" . }}-shibd
+        - name: HTTPD_HOST
+          value: "open-stg.jupyter.ubc.ca"
+        - name: ANALYTICS_TAG
+          value: "G-KPCRT5X0JB"
+        - name: SHIBD_REMOTE_USER
+          value: "{{ .Values.shib.remoteUser }}"
+        - name: SHIBBOLETH_IDP_DISCOVERY_URL
+          value: "{{ .Values.shib.idp.discoveryUrl }}"
+        - name: SHIBBOLETH_IDP_METADATA_URL
+          value: "{{ .Values.shib.idp.metadataUrl }}"
+        - name: SHIBBOLETH_IDP_ENTITY_ID
+          value: "{{ .Values.shib.idp.entityId }}"
+        - name: SHIBD_ATTRIBUTE_MAP_URL
+          value: "{{ .Values.shib.idp.attributeMapUrl }}"
+        - name: SHIBBOLETH_SP_ENTITY_ID
+          value: "{{ .Values.shib.sp.entityId }}"
+        - name: SHIBD_LISTENER_ACL
+          value: "0.0.0.0/0"
+        - name: SHIBD_LISTENER_ADDRESS
+          value: "0.0.0.0"
+        - name: SHIBD_ODBC_DRIVER
+          value: "MySql"
+        - name: SHIBD_ODBC_LIB
+          value: "odbc-store.so"
+        - name: SHIBD_ODBC_SERVER
+          value: "{{ index $dbconnection 3 }}"
+        - name: SHIBD_ODBC_PORT
+          value: "{{ index $dbconnection 4 }}"
+        - name: SHIBD_ODBC_DATABASE
+          value: "{{ index $dbconnection 5 }}"
+        - name: SHIB_ODBC_USER
+          value: "{{ index $dbconnection 1 }}"
+        - name: SHIB_ODBC_PASSWORD
+          valueFrom:
+           secretKeyRef:
+            name: {{ include "jupyterhub.shib.fullname" . }}-db-password
+            key: SHIB_ODBC_PASSWORD
+        - name: LOG_LEVEL
+          value: "{{ .Values.shib.logLevel }}"
+        - name: SHIBD_CONSISTENT_ADDRESS
+          value: "false"
+        {{- with .Values.shib.web.resources }}
+        resources:
+          {{- . | toYaml | nindent 10 }}
+        {{- end }}
+        volumeMounts:
+        {{- if .Values.shib.sp.key }}
+        - name: shibd-cert
+          mountPath: /etc/shibboleth/cert
+        {{- end }}
+        {{- if .Values.shib.attributeMap }}
+        - name: attribute-map
+          mountPath: /etc/shibboleth/attribute-map.xml
+          subPath: "attribute-map.xml"
+        {{- end }}
+      volumes:
+      {{- if .Values.shib.sp.key }}
+      - name: shibd-cert
+        secret:
+          secretName: {{ include "jupyterhub.shib.fullname" .  }}-shibd
+      {{- end }}
+      {{- if .Values.shib.attributeMap }}
+      - name: attribute-map
+        configMap:
+          name: {{ include "jupyterhub.shib.fullname" .  }}-cm
+      {{- end }}
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "jupyterhub.shib.fullname" . }}-shibd
+  labels:
+    {{- include "jupyterhub.labels" . | nindent 4 }}
+    tier: shibd
+spec:
+  replicas: {{ .Values.shib.shibd.replicas }}
+  selector:
+    matchLabels:
+      {{- include "jupyterhub.labels" . | nindent 6 }}
+      tier: shibd
+  template:
+    metadata:
+      labels:
+        {{- include "jupyterhub.labels" . | nindent 8 }}
+        tier: shibd
+    spec:
+      containers:
+      - image: {{ .Values.shib.shibd.image.name }}:{{ .Values.shib.shibd.image.tag }}
+        name: shibd
+        ports:
+        - name: shibd
+          containerPort: 1600
+        env:
+        - name: SHIBD_REMOTE_USER
+          value: "{{ .Values.shib.remoteUser }}"
+        - name: SHIBBOLETH_IDP_DISCOVERY_URL
+          value: "{{ .Values.shib.idp.discoveryUrl }}"
+        - name: SHIBBOLETH_IDP_METADATA_URL
+          value: "{{ .Values.shib.idp.metadataUrl }}"
+        - name: SHIBBOLETH_IDP_ENTITY_ID
+          value: "{{ .Values.shib.idp.entityId }}"
+        - name: SHIBD_ATTRIBUTE_MAP_URL
+          value: "{{ .Values.shib.idp.attributeMapUrl }}"
+        - name: SHIBBOLETH_SP_ENTITY_ID
+          value: "{{ .Values.shib.sp.entityId }}"
+        - name: SHIBD_LISTENER_ACL
+          value: "0.0.0.0/0"
+        - name: SHIBD_LISTENER_ADDRESS
+          value: "0.0.0.0"
+        - name: SHIBD_ODBC_DRIVER
+          value: "{{ .Values.shib.odbc.driver }}"
+        - name: SHIBD_ODBC_LIB
+          value: "{{ .Values.shib.odbc.lib }}"
+        - name: SHIBD_ODBC_SERVER
+          value: "{{ index $dbconnection 3 }}"
+        - name: SHIBD_ODBC_PORT
+          value: "{{ index $dbconnection 4 }}"
+        - name: SHIBD_ODBC_DATABASE
+          value: "{{ index $dbconnection 5 }}"
+        - name: SHIB_ODBC_USER
+          value: "{{ index $dbconnection 1 }}"
+        - name: SHIB_ODBC_PASSWORD
+          valueFrom:
+           secretKeyRef:
+            name: {{ include "jupyterhub.shib.fullname" . }}-db-password
+            key: SHIB_ODBC_PASSWORD
+        - name: LOG_LEVEL
+          value: "{{ .Values.shib.logLevel }}"
+        livenessProbe:
+          tcpSocket:
+            port: 1600
+        readinessProbe:
+          tcpSocket:
+            port: 1600
+        {{- with .Values.shib.shibd.resources }}
+        resources:
+          {{- . | toYaml | nindent 10 }}
+        {{- end }}
+        volumeMounts:
+        {{- if .Values.shib.sp.key }}
+        - name: shibd-cert
+          mountPath: /etc/shibboleth/cert
+        {{- end }}
+        {{- if .Values.shib.attributeMap }}
+        - name: attribute-map
+          mountPath: /etc/shibboleth/attribute-map.xml
+          subPath: "attribute-map.xml"
+        {{- end }}
+      volumes:
+      {{- if .Values.shib.sp.key }}
+      - name: shibd-cert
+        secret:
+          secretName: {{ include "jupyterhub.shib.fullname" .  }}-shibd
+      {{- end }}
+      {{- if .Values.shib.attributeMap }}
+      - name: attribute-map
+        configMap:
+          name: {{ include "jupyterhub.shib.fullname" .  }}-cm
+      {{- end }}
+
+{{- end }}

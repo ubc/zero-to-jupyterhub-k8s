@@ -173,6 +173,11 @@
     {{- include "jupyterhub.fullname.dash" . }}image-pull-secret
 {{- end }}
 
+{{- /* shib Deployment */}}
+{{- define "jupyterhub.shib.fullname" -}}
+    {{- include "jupyterhub.fullname.dash" . }}shib
+{{- end }}
+
 {{- /* Ingress */}}
 {{- define "jupyterhub.ingress.fullname" -}}
     {{- if (include "jupyterhub.fullname" .) }}
