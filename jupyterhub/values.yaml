@@ -672,3 +672,51 @@ debug:
 
 global:
   safeToShowValues: false
+
+shib:
+  enabled: false
+  logLevel: INFO
+  port: 1600
+  web:
+    image:
+      name: 032401129069.dkr.ecr.ca-central-1.amazonaws.com/jupyterhub
+      tag: cf95492-dirty
+      pullPolicy:
+      pullSecrets: []
+    replicas: 1
+    resources:
+      requests:
+        memory: 64Mi
+        cpu: 50m
+  shibd:
+    image:
+      name: lthub/shibd
+      tag: sha-b5fcdb2
+      pullPolicy:
+      pullSecrets: []
+    replicas: 1
+    resources:
+      requests:
+        memory: 64Mi
+        cpu: 50m
+  ingress:
+    enabled: false
+    host: example.com
+    annotations: {}
+  remoteUser: eduPersonPrincipalName
+  idp:
+    discoveryUrl: https://example.com
+    metadataUrl: https://example.com/idp/shibboleth
+    entityId: https://example.com
+    # uncomment to enable remote attribute map loading
+    #attributeMapUrl: https://example.com/attribute-map.xml
+  sp:
+    entityId: https://sp.example.com
+    # key:
+    # cert:
+  odbc:
+    driver: MySql
+    lib: odbc-store.so
+#  attributeMap: |
+#    <Attributes xmlns="urn:mace:shibboleth:2.0:attribute-map" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+#    </Attributes>

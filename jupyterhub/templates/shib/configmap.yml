@@ -1,0 +1,12 @@
+{{- if .Values.shib.attributeMap }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "jupyterhub.shib.fullname" . }}-cm
+  labels:
+    {{- include "jupyterhub.labels" . | nindent 4 }}
+    component: shibd
+data:
+  attribute-map.xml: |
+{{ .Values.shib.attributeMap | indent 4 }}
+{{- end -}}
