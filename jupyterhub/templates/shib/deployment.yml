@@ -30,7 +30,7 @@ spec:
         - name: SHIB_HOST
           value: {{ include "jupyterhub.shib.fullname" . }}-shibd
         - name: HTTPD_HOST
-          value: "open-stg.jupyter.ubc.ca"
+          value: {{ .Values.shib.ingress.host }}
         - name: ANALYTICS_TAG
           value: "G-KPCRT5X0JB"
         - name: SHIBD_REMOTE_USER
