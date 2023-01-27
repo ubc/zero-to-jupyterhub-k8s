@@ -598,7 +598,7 @@ shib:
   shibd:
     image:
       name: lthub/shibd
-      tag: sha-b5fcdb2
+      tag: v3.2.1-3.1_B4
       pullPolicy:
       pullSecrets: []
     replicas: 1
@@ -614,6 +614,7 @@ shib:
   idp:
     discoveryUrl: https://example.com
     metadataUrl: https://example.com/idp/shibboleth
+    metadataBackupfile: /var/cache/shibboleth/shibboleth-metadata-idp.xml
     entityId: https://example.com
     # uncomment to enable remote attribute map loading
     #attributeMapUrl: https://example.com/attribute-map.xml
