@@ -162,6 +162,8 @@ spec:
             key: SHIB_ODBC_PASSWORD
         - name: LOG_LEVEL
           value: "{{ .Values.shib.logLevel }}"
+        - name: SHIBD_CONSISTENT_ADDRESS
+          value: "false"
         livenessProbe:
           tcpSocket:
             port: 1600
