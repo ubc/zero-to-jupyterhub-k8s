@@ -40,7 +40,7 @@ spec:
         - name: SHIBBOLETH_IDP_METADATA_URL
           value: "{{ .Values.shib.idp.metadataUrl }}"
         - name: SHIBBOLETH_IDP_METADATA_BACKUPFILE
-          value: "{{ .Values.shibd.idp.metadataBackupFile }}"
+          value: "{{ .Values.shib.idp.metadataBackupFile }}"
         - name: SHIBBOLETH_IDP_ENTITY_ID
           value: "{{ .Values.shib.idp.entityId }}"
         - name: SHIBD_ATTRIBUTE_MAP_URL
@@ -132,7 +132,7 @@ spec:
         - name: SHIBBOLETH_IDP_METADATA_URL
           value: "{{ .Values.shib.idp.metadataUrl }}"
         - name: SHIBBOLETH_IDP_METADATA_BACKUPFILE
-          value: "{{ .Values.shibd.idp.metadataBackupFile }}"
+          value: "{{ .Values.shib.idp.metadataBackupFile }}"
         - name: SHIBBOLETH_IDP_ENTITY_ID
           value: "{{ .Values.shib.idp.entityId }}"
         - name: SHIBD_ATTRIBUTE_MAP_URL
