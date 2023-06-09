@@ -680,7 +680,7 @@ shib:
   web:
     image:
       name: 032401129069.dkr.ecr.ca-central-1.amazonaws.com/jupyterhub
-      tag: cf95492-dirty
+      tag: shib-web-latestv1
       pullPolicy:
       pullSecrets: []
     replicas: 1
