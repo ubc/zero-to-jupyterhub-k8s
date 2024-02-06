@@ -20,6 +20,10 @@ spec:
         {{- include "jupyterhub.labels" . | nindent 8 }}
         tier: web
     spec:
+      {{- with concat .Values.scheduling.corePods.tolerations .Values.shib.shibd.tolerations }}
+      tolerations:
+        {{- . | toYaml | nindent 8 }}
+      {{- end }}
       containers:
       - image: {{ .Values.shib.web.image.name }}:{{ .Values.shib.web.image.tag }}
         name: shib-web
@@ -118,6 +122,10 @@ spec:
         {{- include "jupyterhub.labels" . | nindent 8 }}
         tier: shibd
     spec:
+      {{- with concat .Values.scheduling.corePods.tolerations .Values.shib.shibd.tolerations }}
+      tolerations:
+        {{- . | toYaml | nindent 8 }}
+      {{- end }}
       containers:
       - image: {{ .Values.shib.shibd.image.name }}:{{ .Values.shib.shibd.image.tag }}
         name: shibd
