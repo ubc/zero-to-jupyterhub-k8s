@@ -562,6 +562,9 @@ scheduling:
       - key: hub.jupyter.org/imagepulling
         operator: Exists
         effect: NoExecute
+      - key: node-role.kubernetes.io/master
+        operator: Equal
+        effect: NoSchedule
     nodeAffinity:
       matchNodePurpose: prefer
   userPods:
@@ -699,6 +702,7 @@ shib:
       requests:
         memory: 64Mi
         cpu: 50m
+    tolerations: []
   ingress:
     enabled: false
     host: example.com
