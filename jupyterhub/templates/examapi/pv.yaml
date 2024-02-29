@@ -1,39 +1,40 @@
----
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: {{ include "jupyterhub.efs.fullname" . }}
-spec:
-  capacity:
-    storage: 5Gi
-  volumeMode: Filesystem
-  accessModes:
-    - ReadWriteMany
-  persistentVolumeReclaimPolicy: Retain
-  storageClassName: {{ .Values.examapi.storageClassName }}
-  csi:
-    driver: efs.csi.aws.com
-    volumeHandle: {{ .Values.examapi.efsHandle }}
+{{/*---*/}}
+{{/*apiVersion: v1*/}}
+{{/*kind: PersistentVolume*/}}
+{{/*metadata:*/}}
+{{/*  name: {{ include "jupyterhub.efs.fullname" . }}*/}}
+{{/*spec:*/}}
+{{/*  capacity:*/}}
+{{/*    storage: 5Gi*/}}
+{{/*  volumeMode: Filesystem*/}}
+{{/*  accessModes:*/}}
+{{/*    - ReadWriteMany*/}}
+{{/*  persistentVolumeReclaimPolicy: Retain*/}}
+{{/*  storageClassName: {{ .Values.examapi.storageClassName }}*/}}
+{{/*  csi:*/}}
+{{/*    driver: efs.csi.aws.com*/}}
+{{/*    volumeHandle: {{ .Values.examapi.efsHandle }}*/}}
 
 ---
 
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: efs
+  name: home
 spec:
   accessModes:
     - ReadWriteMany
-  storageClassName: {{ .Values.examapi.storageClassName }}
+  storageClassName: ""
+  volumeName: home
   resources:
     requests:
       storage: 5Gi
 
-{{- if .Values.examapi.createStorageClass }}
----
-kind: StorageClass
-apiVersion: storage.k8s.io/v1
-metadata:
-  name: {{ .Values.examapi.storageClassName }}
-provisioner: efs.csi.aws.com
-{{- end }}
+{{/*{{- if .Values.examapi.createStorageClass }}*/}}
+{{/*---*/}}
+{{/*kind: StorageClass*/}}
+{{/*apiVersion: storage.k8s.io/v1*/}}
+{{/*metadata:*/}}
+{{/*  name: {{ .Values.examapi.storageClassName }}*/}}
+{{/*provisioner: efs.csi.aws.com*/}}
+{{/*{{- end }}*/}}

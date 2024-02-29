@@ -691,10 +691,12 @@ examapi:
   dataInternal: # /mnt/efs/example-internal
   apiKey:
   # set to true if the StorageClass doesn't exist
-  createStorageClass: false
-  storageClassName: exam-api-sc
+  #  createStorageClass: false
+  #  storageClassName: exam-api-sc
   # EFS identifier in the format of "fs-xxxxxxxxxxxx"
-  efsHandle:
+  #  efsHandle:
+  # persistent volume claim name, should use the same value as singleuser.storage.static.pvcName
+  pvcName:
   service:
     type: NodePort
     annotations: {}
