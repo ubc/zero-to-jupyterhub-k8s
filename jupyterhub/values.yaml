@@ -690,11 +690,6 @@ examapi:
   dataSnap: # /mnt/efs/example-snap
   dataInternal: # /mnt/efs/example-internal
   apiKey:
-  # set to true if the StorageClass doesn't exist
-  #  createStorageClass: false
-  #  storageClassName: exam-api-sc
-  # EFS identifier in the format of "fs-xxxxxxxxxxxx"
-  #  efsHandle:
   # persistent volume claim name, should use the same value as singleuser.storage.static.pvcName
   pvcName:
   service:
@@ -706,6 +701,10 @@ examapi:
     loadBalancerIP:
   # the DNS name for exam api. AWS load balance controller uses it for discover SSL cert.
   host:
+
+efs:
+  # EFS identifier in the format of "fs-xxxxxxxxxxxx"
+  handle:
 
 debug:
   enabled: false
