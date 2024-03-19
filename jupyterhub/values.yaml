@@ -691,6 +691,9 @@ shib:
       requests:
         memory: 64Mi
         cpu: 50m
+    sessionLifetime: 14400
+    sessionTimeout: 7200
+    cacheTimeout: 7200
   shibd:
     image:
       name: lthub/shibd
@@ -703,6 +706,7 @@ shib:
         memory: 64Mi
         cpu: 50m
     tolerations: []
+
   ingress:
     enabled: false
     host: example.com

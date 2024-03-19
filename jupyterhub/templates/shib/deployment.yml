@@ -76,6 +76,12 @@ spec:
           value: "{{ .Values.shib.logLevel }}"
         - name: SHIBD_CONSISTENT_ADDRESS
           value: "false"
+        - name: SHIBBOLETH_SESSION_LIFETIME
+          value: "{{ .Values.shib.web.sessionLifetime }}"
+        - name: SHIBBOLETH_SESSION_TIMEOUT
+          value: "{{ .Values.shib.web.sessionTimeout }}"
+        - name: SHIBBOLETH_CACHE_TIMEOUT
+          value: "{{ .Values.shib.web.cacheTimeout }}"
         {{- with .Values.shib.web.resources }}
         resources:
           {{- . | toYaml | nindent 10 }}
@@ -172,6 +178,12 @@ spec:
           value: "{{ .Values.shib.logLevel }}"
         - name: SHIBD_CONSISTENT_ADDRESS
           value: "false"
+        - name: SHIBBOLETH_SESSION_LIFETIME
+          value: "{{ .Values.shib.web.sessionLifetime }}"
+        - name: SHIBBOLETH_SESSION_TIMEOUT
+          value: "{{ .Values.shib.web.sessionTimeout }}"
+        - name: SHIBBOLETH_CACHE_TIMEOUT
+          value: "{{ .Values.shib.web.cacheTimeout }}"
         livenessProbe:
           tcpSocket:
             port: 1600
