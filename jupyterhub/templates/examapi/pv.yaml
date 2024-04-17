@@ -20,7 +20,7 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: efs
+  name: {{ include "jupyterhub.efs.fullname" . }}
 spec:
   accessModes:
     - ReadWriteMany
