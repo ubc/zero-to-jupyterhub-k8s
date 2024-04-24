@@ -87,6 +87,24 @@
   {{- end }}
   {{- println }}
 
+  {{- if .Values.examapi.enabled }}
+### Exam snapshot API commands
+
+  - Create a snapshot:
+
+      curl --location --request POST 'https://{{ $.Values.examapi.host }}/snapshot_all' \
+           --header 'X-Api-Key: {{ $.Values.examapi.apiKey }}' \
+           --form 'SNAPSHOT_NAME="{{ .Release.Namespace }}"'
+
+  - Download a snapshot:
+
+      curl --location --request POST 'https://{{ $.Values.examapi.host }}/get_snapshot_zip' \
+           --header 'X-Api-Key: {{ $.Values.examapi.apiKey }}' \
+           --header 'Content-Type: application/x-www-form-urlencoded' \
+           --data-urlencode 'SNAPSHOT_NAME={{ .Release.Namespace }}_{{ now | date "2006-01-02" }}' \
+           --output {{ .Release.Namespace }}_{{ now | date "2006-01-02" }}.zip
+  {{- end }}
+
 
 
 
