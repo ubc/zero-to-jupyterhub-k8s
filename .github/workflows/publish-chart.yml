@@ -1,0 +1,98 @@
+name: Publish Helm chart
+on:
+  push:
+    paths-ignore:
+      - "docs/**"
+      - "**.md"
+      - ".github/workflows/*"
+      - "!.github/workflows/publish.yaml"
+    branches-ignore:
+      - "dependabot/**"
+      - "pre-commit-ci-update-config"
+      - "update-*"
+      - "vuln-scan-*"
+    tags:
+      - "**"
+env:
+  CR_PACKAGE_PATH: .cr-release-packages
+  HELM_REP: jupyterhub
+  GH_OWNER: ubc
+  CHART_DIR: jupyterhub
+  REGISTRY: ghcr.io
+#  KIND_VERSION: v0.17.0
+#  KIND_IMAGE: kindest/node:v1.21.1@sha256:69860bda5563ac81e3c0057d654b5253219618a22ec3a346306239bba8cfa1a6
+jobs:
+  release:
+    # this job will only run if the PR has been merged
+    if: github.event.client_payload.action == 'chart-release' || github.event.client_payload.action == 'chart-and-app-release'
+    permissions:
+      #      contents: write  # for peter-evans/repository-dispatch to create a repository dispatch event
+      packages: write # to push OCI chart package to GitHub Registry
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.16.1
+      - name: Set up python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.10
+      #      - name: Setup Chart Linting
+      #        id: lint
+      #        uses: helm/chart-testing-action@v2
+      #      - name: Setup Kubernetes cluster (KIND)
+      #        uses: helm/kind-action@v1.10.0 # v1.5.0
+      #        with:
+      #          version: ${{ env.KIND_VERSION }}
+      #          node_image: ${{ env.KIND_IMAGE }}
+      #      - name: Run chart-testing
+      #        run: ct lint-and-install --validate-maintainers=false --charts deploy/helm
+      - name: Install chart-releaser
+        run: |
+          wget https://github.com/helm/chart-releaser/releases/download/v1.6.1/chart-releaser_1.6.1_linux_amd64.tar.gz
+          echo "d4a2ffa825ff1b60a1cce819ce87eec337cf16059ca3d8a053e20cac39cf9e0a  chart-releaser_1.6.1_linux_amd64.tar.gz" | sha256sum -c -
+          tar xzvf chart-releaser_1.6.1_linux_amd64.tar.gz cr
+      - name: Install chart publishing dependencies (chartpress, helm)
+        run: |
+          pip install chartpress pyyaml
+
+      - name: Package helm chart
+        run: |
+          chartpress --no-build
+          ./cr package ${{ env.CHART_DIR }}
+
+        # OCI registry as helm repository (helm 3.8+)
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push chart to GHCR
+        run: |
+          shopt -s nullglob
+          for pkg in ${{ env.CR_PACKAGE_PATH }}/*.tgz; do
+            if [ -z "${pkg:-}" ]; then
+              break
+            fi
+            helm push "${pkg}" oci://${{ env.REGISTRY }}/${{ env.GH_OWNER }}/${{ env.HELM_REP }}
+          done
+
+#      - name: Get latest tag
+#        id: latest_tag
+#        run: |
+#          latest_tag=$(git describe --tags --abbrev=0)
+#          echo "::set-output name=tag::$latest_tag"
+
+#      - name: Repository Dispatch Publish docs
+#        if: github.event.client_payload.action == 'chart-and-app-release' && !contains(steps.latest_tag.outputs.tag, 'rc')
+#        uses: peter-evans/repository-dispatch@v3
+#        with:
+#          token: ${{ secrets.GITHUB_TOKEN }}
+#          event-type: publish-docs
+#          client-payload: '{"action": "docs-release", "tag": "${{ steps.latest_tag.outputs.tag }}"}'
