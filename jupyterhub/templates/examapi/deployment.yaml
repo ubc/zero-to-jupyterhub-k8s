@@ -46,9 +46,9 @@ spec:
           value: {{ .Values.examapi.courseCode }}
         - name: DEBUG
           value: {{ .Values.examapi.debug | quote }}
-        - name: JUPYTER_API_PORT
+        - name: WAITRESS_PORT
           value: {{ .Values.examapi.apiPort | quote }}
-        - name: JUPYTER_API_HOST
+        - name: WAITRESS_HOST
           value: {{ .Values.examapi.apiHost | quote }}
         {{- with .Values.examapi.dataHome }}
         - name: JNOTE_HOME

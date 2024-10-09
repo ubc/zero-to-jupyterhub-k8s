@@ -671,7 +671,7 @@ examapi:
   enabled: true
   image:
     name: lthub/jupyterhub-api
-    tag: sha-bc8937e
+    tag: sha-90fbb68
     pullPolicy:
     pullSecrets: []
   resources: {}
