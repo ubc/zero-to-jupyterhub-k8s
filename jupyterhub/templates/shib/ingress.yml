@@ -21,6 +21,6 @@ spec:
               service:
                name: {{ include "jupyterhub.shib.fullname" . }}-web
                port:
-                number: 443
+                number: 80
 {{- end }}
 {{- end }}

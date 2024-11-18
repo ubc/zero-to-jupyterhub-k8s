@@ -682,8 +682,8 @@ shib:
   port: 1600
   web:
     image:
-      name: 032401129069.dkr.ecr.ca-central-1.amazonaws.com/jupyterhub
-      tag: shib-web-latestv1
+      name: 032401129069.dkr.ecr.ca-central-1.amazonaws.com/shib-web
+      tag: v1.0.0
       pullPolicy:
       pullSecrets: []
     replicas: 1
