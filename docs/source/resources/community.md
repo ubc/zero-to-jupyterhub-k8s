@@ -94,7 +94,7 @@ user pods. You can search for all user pods with the following label query:
 
 ```bash
 kubectl --namespace=<YOUR-NAMESPACE> get pod \
-    -l "component=singleuser-server"
+    -l "app.kubernetes.io/component=singleuser-server"
 ```
 
 For more information, see the [Kubernetes labels and selectors page](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/).
@@ -122,7 +122,7 @@ Request to add yourself to this alphabetically sorted list!
 - [MyBinder.org](https://mybinder.org)
 - [PAWS](https://www.mediawiki.org/wiki/PAWS) at [Wikimedia Cloud Services](https://www.mediawiki.org/wiki/Wikimedia_Cloud_Services_team)
 - A group of universities near Paris (led by a team at CNRS and Polytechnique) deployed [a cross-institutional JupyterHub](https://blog.jupyter.org/how-to-deploy-jupyterhub-with-kubernetes-on-openstack-f8f6120d4b1) for university use.
-- [Globus](https://www.globus.org/) runs an [instance of Zero-to-JupyterHub](<https://jupyter.demo.globus.org/) to help users learn about Globus REST APIs.
+- [Globus](https://www.globus.org/) runs an [instance of Zero-to-JupyterHub](https://jupyter.demo.globus.org/) to help users learn about Globus REST APIs.
 
 (users-list)=
 

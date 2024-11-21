@@ -3,6 +3,7 @@
 # Configuration reference: https://www.sphinx-doc.org/en/master/usage/configuration.html
 #
 import datetime
+import json
 import os
 import re
 import subprocess
@@ -23,6 +24,7 @@ author = "Project Jupyter Contributors"
 extensions = [
     "myst_parser",
     "sphinx_copybutton",
+    "sphinx.ext.intersphinx",
     "sphinx.ext.mathjax",
     "sphinxext.opengraph",
     "sphinxext.rediraffe",
@@ -36,6 +38,7 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 # ref: https://myst-parser.readthedocs.io/en/latest/configuration.html
 #
 myst_enable_extensions = [
+    "colon_fence",
     "substitution",
 ]
 
@@ -89,14 +92,29 @@ header_md = header_md[1:]
 header_md = [ln.strip("\n") for ln in header_md]
 
 # schema
-with open("../../jupyterhub/schema.yaml") as f:
+with open("../../jupyterhub/values.schema.yaml") as f:
     data = yaml.safe_load(f)
+
+
+# default_values
+with open("../../jupyterhub/values.yaml") as f:
+    default_values = yaml.safe_load(f)
+
+
+def get_default_value(k):
+    """
+    Get the default value from values.yaml
+    """
+    v = default_values
+    for key in k.split("."):
+        v = v[key]
+    return v
 
 
 def parse_schema(d, md=[], depth=0, pre=""):
     """
     Generate markdown headers from a passed python dictionary created by
-    parsing a schema.yaml file.
+    parsing a values.schema.yaml file.
     """
     if "then" in d:
         d = d["then"]
@@ -111,7 +129,23 @@ def parse_schema(d, md=[], depth=0, pre=""):
             if "description" in val:
                 for ln in val["description"].split("\n"):
                     md.append(ln)
-                md.append("")
+            try:
+                def_value = get_default_value(f"{pre}{key}")
+                if (
+                    def_value is not None
+                    and not isinstance(def_value, dict)
+                    and def_value
+                    not in (
+                        "set-by-chartpress",
+                        "",
+                    )
+                ):
+                    # Use the JSON string representation instead of Python
+                    md.append(f"_Default:_ `{json.dumps(def_value)}`")
+                    md.append("")
+            except KeyError:
+                # TODO: Should we error if the property isn't in values.yaml?
+                pass
 
             parse_schema(val, md, depth, f"{pre}{key}.")
         depth -= 1
@@ -124,6 +158,30 @@ schema_md = parse_schema(data)
 reference_md = header_md + schema_md
 with open("resources/reference.md", "w") as f:
     f.write("\n".join(reference_md))
+
+
+# -- Options for intersphinx extension ---------------------------------------
+# ref: https://www.sphinx-doc.org/en/master/usage/extensions/intersphinx.html#configuration
+#
+# The extension makes us able to link like to other projects like below.
+#
+#     rST  - :external:py:class:`tornado.httpclient.AsyncHTTPClient`
+#     MyST - {external:py:class}`tornado.httpclient.AsyncHTTPClient`
+#
+# To see what we can link to, do the following where "objects.inv" is appended
+# to the sphinx based website:
+#
+#     python -m sphinx.ext.intersphinx https://jupyterhub.readthedocs.io/en/stable/objects.inv
+#
+intersphinx_mapping = {
+    "jupyterhub": ("https://jupyterhub.readthedocs.io/en/stable/", None),
+    "oauthenticator": ("https://oauthenticator.readthedocs.io/en/stable/", None),
+    "kubespawner": ("https://jupyterhub-kubespawner.readthedocs.io/en/stable/", None),
+}
+
+# intersphinx_disabled_reftypes set based on recommendation in
+# https://docs.readthedocs.io/en/stable/guides/intersphinx.html#using-intersphinx
+intersphinx_disabled_reftypes = ["*"]
 
 
 # -- Options for HTML output -------------------------------------------------
@@ -148,6 +206,14 @@ html_context = {
 }
 
 
+# -- Readthedocs specific configuration -------------------------------------------
+# ref: https://about.readthedocs.com/blog/2024/07/addons-by-default/
+#
+html_baseurl = os.environ.get("READTHEDOCS_CANONICAL_URL", "")
+if os.environ.get("READTHEDOCS", "") == "True":
+    html_context["READTHEDOCS"] = True
+
+
 # -- Options for linkcheck builder -------------------------------------------
 # ref: https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-the-linkcheck-builder
 #
@@ -161,6 +227,7 @@ linkcheck_ignore = [
     "https://your-domain-name.com",  # example
     "https://kubernetes.io/docs/tutorials/kubernetes-basics/",  # works
     "https://cloud.ibm.com/kubernetes/catalog/create",  # works
+    "https://github.com/traefik/traefik/blob/HEAD/CHANGELOG.md",  # works
     "https://portal.azure.com",  # sign-in redirect noise
     "https://console.cloud.google.com",  # sign-in redirect noise
     "https://console.developers.google.com",  # sign-in redirect noise
@@ -215,6 +282,7 @@ rediraffe_redirects = {
     "microsoft/step-zero-azure-autoscale": "kubernetes/microsoft/step-zero-azure",
     "microsoft/step-zero-azure": "kubernetes/microsoft/step-zero-azure",
     "google/step-zero-gcp": "kubernetes/google/step-zero-gcp",
+    "kubernetes/other-infrastructure/step-zero-microk8s": "kubernetes/other-infrastructure/step-zero-other",
     "create-k8s-cluster": "kubernetes/setup-kubernetes",
     "turn-off": "jupyterhub/uninstall",
     "setup-jupyterhub": "jupyterhub/index",
