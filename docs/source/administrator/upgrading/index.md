@@ -22,6 +22,8 @@ or the [Discourse forum](https://discourse.jupyter.org/).
 :maxdepth: 1
 :caption: Major releases guides
 
+upgrade-3-to-4
+upgrade-2-to-3
 upgrade-1-to-2
 ```
 
@@ -113,7 +115,7 @@ Update the configuration to use this new image, which is typically done via
 ## JupyterHub versions installed in each Helm Chart
 
 Each Helm Chart is packaged with a specific version of JupyterHub (and
-other software as well). See the [Helm Chart repository](https://jupyterhub.github.io/helm-chart/) for
+other software as well). See the [Helm Chart repository](https://hub.jupyter.org/helm-chart/) for
 information about the versions of relevant software packages.
 
 ## Troubleshooting

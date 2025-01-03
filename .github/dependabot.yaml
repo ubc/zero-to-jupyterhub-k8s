@@ -9,8 +9,21 @@ version: 2
 updates:
   # Maintain dependencies in our GitHub Workflows
   - package-ecosystem: github-actions
-    directory: "/" # This should be / rather than .github/workflows
+    directory: /
+    labels: [ci]
     schedule:
-      interval: weekly
+      interval: monthly
       time: "05:00"
-      timezone: "Etc/UTC"
+      timezone: Etc/UTC
+  - package-ecosystem: pip
+    directory: /images/hub/unfrozen
+    labels: [breaking]
+    groups:
+      major-versions:
+        update-types: [major]
+        exclude-patterns:
+          - jupyterhub # bumped by other automation
+    schedule:
+      interval: daily
+      time: "05:00"
+      timezone: Etc/UTC

@@ -177,6 +177,8 @@ hub:
     enabled: true
     egressAllowRules:
       cloudMetadataServer: true
+      dnsPortsCloudMetadataServer: true
+      dnsPortsKubeSystemNamespace: true
       dnsPortsPrivateIPs: true
       nonPrivateIPs: true
       privateIPs: false
@@ -184,7 +186,7 @@ hub:
       - to:
           - podSelector:
               matchLabels:
-                app: my-k8s-local-service
+                app.kubernetes.io/name: my-k8s-local-service
         ports:
           - protocol: TCP
             port: 5978
@@ -342,6 +344,26 @@ singleuser:
         mock description 2
       kubespawner_override:
         image: XYZ:XYZ
+    - display_name: "mock display name 3"
+      description: |
+        mock description 3
+      profile_options:
+        image:
+          display_name: Image
+          choices:
+            image1:
+              display_name: "image 1"
+              kubespawner_override:
+                image: XXX:XXX
+            image2:
+              display_name: "image 2"
+              kubespawner_override:
+                image: YYY:YYY
+          unlisted_choice:
+            enabled: true
+            display_name: "image ZZZ tag"
+            kubespawner_override:
+              image: "ZZZ:{value}"
   nodeSelector:
     mock-node-selector: mock
   extraTolerations:
@@ -402,7 +424,7 @@ singleuser:
   networkPolicy:
     enabled: true
     egressAllowRules:
-      cloudMetadataServer: true
+      cloudMetadataServer: false
       dnsPortsPrivateIPs: true
       nonPrivateIPs: false
       privateIPs: false
@@ -552,6 +574,21 @@ ingress:
     - mocked2.domain.name
   pathSuffix: dummy-pathSuffix
   pathType: ImplementationSpecific
+  extraPaths:
+    - pathType: Prefix
+      path: "/foo"
+      backend:
+        service:
+          name: foo
+          port:
+            number: 80
+    - pathType: Prefix
+      path: "/bar"
+      backend:
+        service:
+          name: bar
+          port:
+            name: barPort
   tls:
     - secretName: jupyterhub-tls
       hosts:

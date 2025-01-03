@@ -16,7 +16,7 @@ details.
     A user who can access the JupyterHub admin panel. They can start/stop user
     pods, and potentially access their notebooks.
 
-[authenticator](https://jupyterhub.readthedocs.io/en/latest/reference/authenticators.html)
+[authenticator](https://jupyterhub.readthedocs.io/en/stable/reference/authenticators.html)
     The way in which users are authenticated to log into JupyterHub. There
     are many authenticators available, like GitHub, Google, MediaWiki,
     Dummy (anyone can log in), etc.
@@ -78,7 +78,7 @@ Kubernetes
     for that cloud.
 
     - [The Illustrated Children's Guide to Kubernetes](https://www.youtube.com/watch?v=4ht22ReBjno)
-    - [The official "What is Kubernetes?" text](https://kubernetes.io/docs/concepts/overview/what-is-kubernetes/)
+    - [The official "What is Kubernetes?" text](https://kubernetes.io/docs/concepts/overview/)
 
 Kubernetes API server
     The [Kubernetes API](https://kubernetes.io/docs/concepts/overview/kubernetes-api/) server,

@@ -1,6 +1,6 @@
 # This schema (a jsonschema in YAML format) is used to generate
 # values.schema.json which is packaged with the Helm chart for client side
-# validation by Helm of values before template rendering.
+# validation by helm of values before template rendering.
 #
 # This schema is also used by our documentation system to build the
 # configuration reference section based on the description fields. See
@@ -27,6 +27,12 @@ required:
   - rbac
   - global
 properties:
+  enabled:
+    type: [boolean, "null"]
+    description: |
+      `enabled` is ignored by the jupyterhub chart itself, but a chart depending
+      on the jupyterhub chart conditionally can make use this config option as
+      the condition.
   fullnameOverride:
     type: [string, "null"]
     description: |
@@ -211,7 +217,7 @@ properties:
           values, you need to use [`hub.extraConfig`](schema_hub.extraConfig)
           instead.
 
-          ```{admonition} Currently intended only for auth config
+          ```{admonition} Some configuration must be set in multiple places
           :class: warning
           This config _currently_ (0.11.0) only influence the software in the
           `hub` Pod, but some Helm chart config options such as
@@ -233,6 +239,8 @@ properties:
           ```python
           c.JupyterHub.admin_access = true
           c.JupyterHub.admin_users = ["jovyan1", "jovyan2"]
+          c.KubeSpawner.k8s_api_request_timeout = 10
+          c.GitHubOAuthenticator.allowed_organizations = ["jupyterhub"]
           ```
 
           Then, you would be able to represent it with this configuration like:
@@ -245,6 +253,11 @@ properties:
                 admin_users:
                   - jovyan1
                   - jovyan2
+              KubeSpawner:
+                k8s_api_request_timeout: 10
+              GitHubOAuthenticator:
+                allowed_organizations:
+                  - jupyterhub
           ```
 
           ```{admonition} YAML limitations
@@ -258,6 +271,25 @@ properties:
           the `--values` or `-f` flag. During merging, lists are replaced while
           dictionaries are updated.
           ```
+        properties:
+          JupyterHub:
+            type: object
+            additionalProperties: true
+            description: |
+              JupyterHub Traitlets configuration.
+
+              See {py:mod}`jupyterhub:jupyterhub.app` for the full list,
+              but take note of the [above warnings](schema_hub.config).
+            properties:
+              subdomain_host:
+                type: string
+                description: |
+                  The subdomain to use for hosting singleuser servers.
+
+                  This helps protect against some cross-origin attacks by giving each user
+                  their own subdomain `<user>.jupyter.example.org`.
+
+                  See {ref}`jupyterhub_subdomains`.
       extraFiles: &extraFiles
         type: object
         additionalProperties: false
@@ -612,7 +644,7 @@ properties:
                     - to:
                         - podSelector:
                             matchLabels:
-                              app: my-k8s-local-service
+                              app.kubernetes.io/name: my-k8s-local-service
                       ports:
                         - protocol: TCP
                           port: 5978
@@ -638,7 +670,6 @@ properties:
               ```
 
               ```{versionadded} 2.0.0
-              All `egressAllowRules` are new in JupyterHub Helm chart 2.0.0.
               ```
             properties:
               cloudMetadataServer:
@@ -654,6 +685,64 @@ properties:
                   IP ranges but makes an exception for the cloud metadata
                   server, leaving this as the definitive configuration to allow
                   access to the cloud metadata server.
+
+                  ```{versionchanged} 3.0.0
+                  This configuration is not allowed to be configured true at the
+                  same time as
+                  [`singleuser.cloudMetadata.blockWithIptables`](schema_singleuser.cloudMetadata.blockWithIptables)
+                  to avoid an ambiguous configuration.
+                  ```
+              dnsPortsCloudMetadataServer:
+                type: boolean
+                description: |
+                  Defaults to `true` for all network policies.
+
+                  When enabled this rule allows the respective pod(s) to
+                  establish outbound connections to the cloud metadata server
+                  via port 53.
+
+                  Relying on this rule for the singleuser config should go hand
+                  in hand with disabling
+                  [`singleuser.cloudMetadata.blockWithIptables`](schema_singleuser.cloudMetadata.blockWithIptables)
+                  to avoid an ambiguous configuration.
+
+                  Known situations when this rule can be relevant:
+
+                  - In GKE clusters with Cloud DNS that is reached at the
+                    cloud metadata server's non-private IP.
+
+                  ```{note}
+                  This chart doesn't know how to identify the DNS server that
+                  pods will rely on due to variations between how k8s clusters
+                  have been setup. Due to that, multiple rules are enabled by
+                  default to ensure DNS connectivity.
+                  ```
+
+                  ```{versionadded} 3.0.0
+                  ```
+              dnsPortsKubeSystemNamespace:
+                type: boolean
+                description: |
+                  Defaults to `true` for all network policies.
+
+                  When enabled this rule allows the respective pod(s) to
+                  establish outbound connections to pods in the kube-system
+                  namespace via port 53.
+
+                  Known situations when this rule can be relevant:
+
+                  - GKE, EKS, AKS, and other clusters relying directly on
+                    `kube-dns` or `coredns` pods in the `kube-system` namespace.
+
+                  ```{note}
+                  This chart doesn't know how to identify the DNS server that
+                  pods will rely on due to variations between how k8s clusters
+                  have been setup. Due to that, multiple rules are enabled by
+                  default to ensure DNS connectivity.
+                  ```
+
+                  ```{versionadded} 3.0.0
+                  ```
               dnsPortsPrivateIPs:
                 type: boolean
                 description: |
@@ -662,10 +751,23 @@ properties:
                   When enabled this rule allows the respective pod(s) to
                   establish outbound connections to private IPs via port 53.
 
-                  Note that we can't reliably identify the k8s internal DNS
-                  server due to variations between k8s clusters. Due to that,
-                  this rule which is critical for core functionality, can be
-                  disabled for a more refined custom rule.
+                  Known situations when this rule can be relevant:
+
+                  - GKE clusters relying on a DNS server indirectly via a a node
+                    local DNS cache at an unknown private IP.
+
+                  ```{note}
+                  This chart doesn't know how to identify the DNS server that
+                  pods will rely on due to variations between how k8s clusters
+                  have been setup. Due to that, multiple rules are enabled by
+                  default to ensure DNS connectivity.
+
+                  ```{warning}
+                  This rule is not expected to work in clusters relying on
+                  Cilium to enforce the NetworkPolicy rules (includes GKE
+                  clusters with Dataplane v2), this is due to a [known
+                  limitation](https://github.com/cilium/cilium/issues/9209).
+                  ```
               nonPrivateIPs:
                 type: boolean
                 description: |
@@ -700,6 +802,13 @@ properties:
                   If possible, try to avoid setting this to true as it gives
                   broad permissions that could be specified more directly via
                   the [`.egress`](schema_singleuser.networkPolicy.egress).
+
+                  ```{warning}
+                  This rule is not expected to work in clusters relying on
+                  Cilium to enforce the NetworkPolicy rules (includes GKE
+                  clusters with Dataplane v2), this is due to a [known
+                  limitation](https://github.com/cilium/cilium/issues/9209).
+                  ```
           interNamespaceAccessLabels:
             enum: [accept, ignore]
             description: |
@@ -1014,6 +1123,10 @@ properties:
             description: |
               Object to configure the ports the hub service will be deployed on.
             properties:
+              appProtocol:
+                type: [string, "null"]
+                description: |
+                  The application protocol to utilize with the Service port. This may be required when an external application attempts to make calls to the hub service with a protocol the hub does not support.
               nodePort:
                 type: [integer, "null"]
                 minimum: 0
@@ -1128,7 +1241,7 @@ properties:
         type: [integer, "null"]
         description: &jupyterhub-native-config-description |
           JupyterHub native configuration, see the [JupyterHub
-          documentation](https://jupyterhub.readthedocs.io/en/stable/api/app.html)
+          documentation](https://jupyterhub.readthedocs.io/en/stable/reference/api/app.html)
           for more information.
       allowNamedServers:
         type: [boolean, "null"]
@@ -1234,7 +1347,7 @@ properties:
           This is where you register JupyterHub services. For details on how to
           configure these services in this Helm chart just keep reading but for
           details on services themselves instead read [JupyterHub's
-          documentation](https://jupyterhub.readthedocs.io/en/stable/api/service.html).
+          documentation](https://jupyterhub.readthedocs.io/en/stable/reference/api/service.html).
 
           ```{note}
           Only a selection of JupyterHub's configuration options that can be
@@ -1329,7 +1442,7 @@ properties:
           permissions as defined in JupyterHub's RBAC system.
 
           Complement this documentation with [JupyterHub's
-          documentation](https://jupyterhub.readthedocs.io/en/latest/rbac/roles.html#defining-roles)
+          documentation](https://jupyterhub.readthedocs.io/en/stable/rbac/roles.html#defining-roles)
           about `load_roles`.
 
           Note that while JupyterHub's native configuration `load_roles` accepts
@@ -1469,7 +1582,7 @@ properties:
                 chp:
                   extraCommandLineFlags:
                     - "--auto-rewrite"
-                    - "--custom-header {{ .Values.myCustomStuff }}"
+                    - "--custom-header={{ .Values.custom.myStuff }}"
               ```
 
               Note that these will be appended last, and if you provide the same
@@ -2120,6 +2233,7 @@ properties:
       cloudMetadata:
         type: object
         additionalProperties: false
+        required: [blockWithIptables, ip]
         description: |
           Please refer to dedicated section in [the Helm chart
           documentation](block-metadata-iptables) for more information about
@@ -2282,6 +2396,14 @@ properties:
 
                   There is of a default StorageClass available in k8s clusters
                   for use if this is unspecified.
+              subPath: &subPath-spec
+                type: [string, "null"]
+                description: |
+                  Configures the `subPath` field of a
+                  `KubeSpawner.volume_mounts` entry added by the Helm chart.
+
+                  Path within the volume from which the container's volume
+                  should be mounted. Defaults to "" (volume's root).
               volumeNameTemplate:
                 type: [string, "null"]
                 description: |
@@ -2311,14 +2433,7 @@ properties:
                 description: |
                   Configures `KubeSpawner.pvc_claim_name` to reference
                   pre-existing storage.
-              subPath:
-                type: [string, "null"]
-                description: |
-                  Configures the `subPath` field of a
-                  `KubeSpawner.volume_mounts` entry added by the Helm chart.
-
-                  Path within the volume from which the container's volume
-                  should be mounted.
+              subPath: *subPath-spec
           type:
             enum: [dynamic, static, none]
             description: |
@@ -2342,6 +2457,8 @@ properties:
           sudo rights for some of your users. This can be done by starting up as
           root, enabling it from the container in a startup script, and then
           transitioning to the normal user.
+
+          Default is 1000, set to null to use the container's default.
 
   scheduling:
     type: object
@@ -2663,6 +2780,13 @@ properties:
           See [the Kubernetes
           documentation](https://kubernetes.io/docs/concepts/services-networking/ingress/#tls)
           for more details about annotations.
+      extraPaths:
+        type: array
+        description: |
+          A list of custom paths to be added to the ingress configuration.
+
+          See [the Kubernetes documentation](https://kubernetes.io/docs/concepts/services-networking/ingress/#path-types)
+          for more details about paths.
 
   prePuller:
     type: object
@@ -2757,9 +2881,12 @@ properties:
       pullProfileListImages:
         type: boolean
         description: |
-          The singleuser.profileList configuration can let the user choose an
-          image through the selection of a profile. This option determines if
-          those images will be pulled, both by the hook and continuous pullers.
+          The singleuser.profileList configuration can provide a selection of
+          images. This option determines if all images identified there should
+          be pulled, both by the hook and continuous pullers.
+
+          Images are looked for under `kubespawner_override`, and also
+          `profile_options.choices.kubespawner_override` since version 3.2.0.
 
           The reason to disable this, is that if you have for example 10 images
           which start pulling in order from 1 to 10, a user that arrives and
@@ -2776,7 +2903,7 @@ properties:
           ```yaml
           prePuller:
             extraImages:
-              myExtraImageIWantPulled:
+              my-extra-image-i-want-pulled:
                 name: jupyter/all-spark-notebook
                 tag: 2343e33dec46
           ```
