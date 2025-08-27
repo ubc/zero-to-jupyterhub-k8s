@@ -190,10 +190,13 @@ spec:
         readinessProbe:
           tcpSocket:
             port: 1600
-        {{- with .Values.shib.shibd.resources }}
         resources:
-          {{- . | toYaml | nindent 10 }}
-        {{- end }}
+          requests:
+            cpu: "{{ .Values.shib.shibd.cpu.guarantee }}"
+            memory: "{{ .Values.shib.shibd.memory.guarantee }}"
+          limits:
+            cpu: "{{ .Values.shib.shibd.cpu.limit }}"
+            memory: "{{ .Values.shib.shibd.memory.limit }}"
         volumeMounts:
         {{- if .Values.shib.sp.key }}
         - name: shibd-cert
