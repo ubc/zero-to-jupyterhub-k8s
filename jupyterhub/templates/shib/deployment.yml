@@ -55,23 +55,6 @@ spec:
           value: "0.0.0.0/0"
         - name: SHIBD_LISTENER_ADDRESS
           value: "0.0.0.0"
-        - name: SHIBD_ODBC_DRIVER
-          value: "MySql"
-        - name: SHIBD_ODBC_LIB
-          value: "odbc-store.so"
-        - name: SHIBD_ODBC_SERVER
-          value: "{{ index $dbconnection 3 }}"
-        - name: SHIBD_ODBC_PORT
-          value: "{{ index $dbconnection 4 }}"
-        - name: SHIBD_ODBC_DATABASE
-          value: "{{ index $dbconnection 5 }}"
-        - name: SHIB_ODBC_USER
-          value: "{{ index $dbconnection 1 }}"
-        - name: SHIB_ODBC_PASSWORD
-          valueFrom:
-           secretKeyRef:
-            name: {{ include "jupyterhub.shib.fullname" . }}-db-password
-            key: SHIB_ODBC_PASSWORD
         - name: LOG_LEVEL
           value: "{{ .Values.shib.logLevel }}"
         - name: SHIBD_CONSISTENT_ADDRESS
@@ -157,23 +140,6 @@ spec:
           value: "0.0.0.0/0"
         - name: SHIBD_LISTENER_ADDRESS
           value: "0.0.0.0"
-        - name: SHIBD_ODBC_DRIVER
-          value: "{{ .Values.shib.odbc.driver }}"
-        - name: SHIBD_ODBC_LIB
-          value: "{{ .Values.shib.odbc.lib }}"
-        - name: SHIBD_ODBC_SERVER
-          value: "{{ index $dbconnection 3 }}"
-        - name: SHIBD_ODBC_PORT
-          value: "{{ index $dbconnection 4 }}"
-        - name: SHIBD_ODBC_DATABASE
-          value: "{{ index $dbconnection 5 }}"
-        - name: SHIB_ODBC_USER
-          value: "{{ index $dbconnection 1 }}"
-        - name: SHIB_ODBC_PASSWORD
-          valueFrom:
-           secretKeyRef:
-            name: {{ include "jupyterhub.shib.fullname" . }}-db-password
-            key: SHIB_ODBC_PASSWORD
         - name: LOG_LEVEL
           value: "{{ .Values.shib.logLevel }}"
         - name: SHIBD_CONSISTENT_ADDRESS

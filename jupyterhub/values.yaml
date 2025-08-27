@@ -790,9 +790,6 @@ shib:
     entityId: https://sp.example.com
     # key:
     # cert:
-  odbc:
-    driver: MySql
-    lib: odbc-store.so
 #  attributeMap: |
 #    <Attributes xmlns="urn:mace:shibboleth:2.0:attribute-map" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 #    </Attributes>
