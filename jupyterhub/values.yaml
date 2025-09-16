@@ -85,7 +85,7 @@ hub:
   extraVolumeMounts: []
   image:
     name: quay.io/jupyterhub/k8s-hub
-    tag: "set-by-chartpress"
+    tag: "4.0.1-0.dev.git.6865.h4775b0e9"
     pullPolicy:
     pullSecrets: []
   resources: {}
@@ -326,7 +326,7 @@ proxy:
         type: "RuntimeDefault"
     image:
       name: quay.io/jupyterhub/k8s-secret-sync
-      tag: "set-by-chartpress"
+      tag: "4.0.1-0.dev.git.6865.h7e0a4041"
       pullPolicy:
       pullSecrets: []
     resources: {}
@@ -366,7 +366,7 @@ singleuser:
   networkTools:
     image:
       name: quay.io/jupyterhub/k8s-network-tools
-      tag: "set-by-chartpress"
+      tag: "4.0.1-0.dev.git.6864.hfc323db4"
       pullPolicy:
       pullSecrets: []
     resources: {}
@@ -419,7 +419,7 @@ singleuser:
       subPath:
   image:
     name: quay.io/jupyterhub/k8s-singleuser-sample
-    tag: "set-by-chartpress"
+    tag: "4.0.1-0.dev.git.6865.hcdaf9424"
     pullPolicy:
     pullSecrets: []
   startTimeout: 300
@@ -654,7 +654,7 @@ prePuller:
     # image and the configuration below relates to the hook-image-awaiter Job
     image:
       name: quay.io/jupyterhub/k8s-image-awaiter
-      tag: "set-by-chartpress"
+      tag: "4.0.1-0.dev.git.6864.hfc323db4"
       pullPolicy:
       pullSecrets: []
     containerSecurityContext:
