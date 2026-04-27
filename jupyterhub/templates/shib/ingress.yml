@@ -22,5 +22,17 @@ spec:
                name: {{ include "jupyterhub.shib.fullname" . }}-web
                port:
                 number: 80
+    {{- if .Values.hub.config.JupyterHub.subdomain_host }}
+    - host: "*.{{ .Values.shib.ingress.host }}"
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+               name: {{ include "jupyterhub.shib.fullname" . }}-web
+               port:
+                number: 80
+    {{- end }}
 {{- end }}
 {{- end }}
