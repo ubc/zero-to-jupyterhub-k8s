@@ -788,6 +788,7 @@ shib:
     sessionLifetime: 14400
     sessionTimeout: 7200
     cacheTimeout: 7200
+    cookieProps: "https"
   shibd:
     image:
       name: lthub/shibd
