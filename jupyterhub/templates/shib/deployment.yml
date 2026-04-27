@@ -82,6 +82,8 @@ spec:
           value: "{{ .Values.shib.web.sessionTimeout }}"
         - name: SHIBBOLETH_CACHE_TIMEOUT
           value: "{{ .Values.shib.web.cacheTimeout }}"
+        - name: SHIBBOLETH_COOKIE_PROPS
+          value: "{{ .Values.shib.web.cookieProps }}"
         {{- with .Values.shib.web.resources }}
         resources:
           {{- . | toYaml | nindent 10 }}
@@ -184,6 +186,8 @@ spec:
           value: "{{ .Values.shib.web.sessionTimeout }}"
         - name: SHIBBOLETH_CACHE_TIMEOUT
           value: "{{ .Values.shib.web.cacheTimeout }}"
+        - name: SHIBBOLETH_COOKIE_PROPS
+          value: "{{ .Values.shib.web.cookieProps }}"
         livenessProbe:
           tcpSocket:
             port: 1600
